@@ -6,29 +6,40 @@ function Todo() {
   const [todo, setTodo] = useState('');
   const [Todos, setTodos] = useState([]);
   const [editId,setEditID]=useState(0)
+  const [error, setError] = useState('');
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
   };
 
 //////ADD-ITEMS---& EDIT-ITEMS
-  const addTodo = () => {
-    if (todo !=='') {
-        setTodos([...Todos, { list: todo, id: Date.now(), status: false }]);
-        console.log(Todos);
+const addTodo = () => {
+  if (todo.trim() !== '') { // Check if todo is not empty or whitespace
+    const trimmedTodo = todo.trim();
+    const isDuplicate = Todos.some((item) => item.list === trimmedTodo);
+    if (isDuplicate) {
+      setError('Duplicate todo found. Please enter a unique todo.');
+    } else {
+      if (editId) {
+        const editTodo = Todos.find((todo) => todo.id === editId);
+        const updatedTodo = Todos.map((to) =>
+          to.id === editTodo.id ? { id: to.id, list: trimmedTodo } : { id: to.id, list: to.list }
+        );
+        setTodos(updatedTodo);
+        setEditID(0);
         setTodo('');
-        
+      } else {
+        setTodos([...Todos, { list: trimmedTodo, id: Date.now(), status: false }]);
+        setTodo('');
+      }
+      setError(''); // Clear the error message
     }
-    if (editId) {
-        const editTodo=Todos.find((todo)=>todo.id ==editId)
-        const updatedTodo=Todos.map((to)=>to.id==editTodo.id
-        ?(to={id :to.id, list:todo}):(to={id:to.id, list:to.list}))
-        setTodos(updatedTodo)
-        setEditID(0)
-        setTodo('')
-    }
-   
-  };
+  } else {
+    setError('Please enter a valid todo.');
+  }
+};
+
 
   const inputRef = useRef(null);
 
@@ -50,18 +61,15 @@ function Todo() {
       return to;
     });
     setTodos(updatedTodos);
-    console.log(updatedTodos);
   };
 
 
 //EDIT-ITEMS-----------
   const onEdit =(id)=>{
-const editTodo=    Todos.find((to)=> to.id===id)
-console.log(editTodo.list);
+    const editTodo=    Todos.find((to)=> to.id===id)
     setTodo(editTodo.list)
-    console.log(setTodo);
     setEditID(editTodo.id)
-}
+  }
 
   return (
    
@@ -79,7 +87,9 @@ console.log(editTodo.list);
         <button type='button' onClick={addTodo}>
           {editId ? 'EDIT' : 'ADD'}
         </button>
+        
       </form>
+      {error && <div className='error'>{error}</div>} {/* Display error message */}
       <div className='list'>
         <ul>
           {Todos.map((to) => (
